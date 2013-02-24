@@ -53,6 +53,7 @@ class AdminModulesControllerCore extends AdminController
 	protected $iso_default_country;
 	protected $filter_configuration = array();
 
+	// PrestaClean - skipped in method 
  	protected $xml_modules_list = 'api.prestashop.com/xml/modules_list_15.xml';
 	protected $logged_on_addons = false;
 
@@ -138,6 +139,11 @@ class AdminModulesControllerCore extends AdminController
 
 	public function ajaxProcessRefreshModuleList()
 	{
+// BEGIN - prestaclean edition
+		$this->status = 'error';
+		return false;
+// END - prestaclean edition
+
 		// Refresh modules_list.xml every week
 		if (!$this->isFresh(Module::CACHE_FILE_MODULES_LIST, 604800))
 		{
@@ -193,6 +199,10 @@ class AdminModulesControllerCore extends AdminController
 
 	public function displayAjaxRefreshModuleList()
 	{
+// BEGIN - prestaclean edition
+		echo Tools::jsonEncode(array('status' => 'error'));
+		return false;
+// END - prestaclean edition
 		echo Tools::jsonEncode(array('status' => $this->status));
 	}
 
