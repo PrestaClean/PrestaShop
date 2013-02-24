@@ -123,6 +123,7 @@ class AdminInformationControllerCore extends AdminController
 	public function displayAjaxCheckFiles()
 	{
 		$this->file_list = array('missing' => array(), 'updated' => array());
+		// PrestaClean @TODO : find an alternative upgrade feed
 		$xml = @simplexml_load_file('http://api.prestashop.com/xml/md5/'._PS_VERSION_.'.xml');
 		if (!$xml)
 			die(Tools::jsonEncode($this->file_list));

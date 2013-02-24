@@ -149,6 +149,7 @@ class AdminLocalizationControllerCore extends AdminController
 			if (Validate::isFileName(Tools::getValue('iso_localization_pack')))
 			{
 			
+				// PrestaClean @TODO : find an alternative localization pack feed
 				$pack = @Tools::file_get_contents('http://api.prestashop.com/localization/'.$version.'/'.Tools::getValue('iso_localization_pack').'.xml');
 
 				if (!$pack && !($pack = @Tools::file_get_contents(dirname(__FILE__).'/../../localization/'.Tools::getValue('iso_localization_pack').'.xml')))
@@ -190,6 +191,7 @@ class AdminLocalizationControllerCore extends AdminController
 		$localizations_pack = false;
 		$this->tpl_option_vars['options_content'] = $this->renderOptions();
 
+		// PrestaClean @TODO : find an alternative localization pack feed
 		$xml_localization = Tools::simplexml_load_file('http://api.prestashop.com/rss/localization.xml');
 		if (!$xml_localization)
 		{

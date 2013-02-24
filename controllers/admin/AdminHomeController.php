@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2013 PrestaShop
+* 2007-2012 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,7 +19,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2013 PrestaShop SA
+*  @copyright  2007-2012 PrestaShop SA
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
@@ -491,15 +491,17 @@ class AdminHomeControllerCore extends AdminController
 		// DISCOVER PRESTASHOP
 		$result['discover_prestashop'] = '<div id="block_tips">'.$this->getBlockDiscover().'</div>';
 
-		if (@fsockopen('api.prestashop.com', 80, $errno, $errst, AdminHomeController::TIPS_TIMEOUT))
-			$result['discover_prestashop'] .= '<div class="row-news"><div id="block_discover"><iframe frameborder="no" style="margin: 0px; padding: 0px; width: 100%; height:300px; overflow:hidden;" src="'.$protocol.'://api.prestashop.com/rss2/news2.php?v='._PS_VERSION_.'&lang='.$isoUser.'"></iframe></div>';
+// BEGIN - prestaclean edition
+//		if (@fsockopen('api.prestashop.com', 80, $errno, $errst, AdminHomeController::TIPS_TIMEOUT))
+//			$result['discover_prestashop'] .= '<div class="row-news"><div id="block_discover"><iframe frameborder="no" style="margin: 0px; padding: 0px; width: 100%; height:300px; overflow:hidden;" src="'.$protocol.'://api.prestashop.com/rss2/news2.php?v='._PS_VERSION_.'&lang='.$isoUser.'"></iframe></div>';
 
-		// SHOW TIPS OF THE DAY
-		$content = @file_get_contents($protocol.'://api.prestashop.com/partner/tipsoftheday/?protocol='.$protocol.'&iso_country='.$isoCountry.'&iso_lang='.Tools::strtolower($isoUser), false, $stream_context);
-		$content = explode('|', $content);
-		if ($content[0] == 'OK' && Validate::isCleanHtml($content[1]))
-			$result['discover_prestashop'] .= '<div id="block_partner_tips">'.$content[1].'</div></div>';
-
+//		// SHOW TIPS OF THE DAY
+//		$content = @file_get_contents($protocol.'://api.prestashop.com/partner/tipsoftheday/?protocol='.$protocol.'&iso_country='.$isoCountry.'&iso_lang='.Tools::strtolower($isoUser), false, $stream_context);
+//		$content = explode('|', $content);
+//		if ($content[0] == 'OK' && Validate::isCleanHtml($content[1]))
+//			$result['discover_prestashop'] .= '<div id="block_partner_tips">'.$content[1].'</div></div>';
+		$result['discover_prestashop'] .= '<div id="block_partner_tips">PrestaClean - no ads</div></div>';
+// END - prestaclean edition
 		$this->content = Tools::jsonEncode($result);
 	}
 
@@ -526,13 +528,15 @@ class AdminHomeControllerCore extends AdminController
 		$isoUser = Context::getContext()->language->iso_code;
 
 		// Refresh preactivation xml file if needed
-		if (is_writable('../config/xml/') && (!file_exists('../config/xml/preactivation.xml') || (time() - filemtime('../config/xml/preactivation.xml')) > 86400))
-		{
-			$stream_context = @stream_context_create(array('http' => array('method'=> 'GET', 'timeout' => AdminHomeController::TIPS_TIMEOUT)));
-			$content = Tools::file_get_contents('http://api.prestashop.com/partner/premium/get_partners.php?protocol='.$protocol.'&iso_country='.Tools::strtoupper($isoCountry).'&iso_lang='.Tools::strtolower($isoUser).'&ps_version='._PS_VERSION_.'&ps_creation='._PS_CREATION_DATE_.'&host='.urlencode($_SERVER['HTTP_HOST']).'&email='.urlencode(Configuration::get('PS_SHOP_EMAIL')), false, $stream_context);
-			@unlink('../config/xml/preactivation.xml');
-			file_put_contents('../config/xml/preactivation.xml', $content);
-		}
+// BEGIN - prestaclean edition
+//		if (is_writable('../config/xml/') && (!file_exists('../config/xml/preactivation.xml') || (time() - filemtime('../config/xml/preactivation.xml')) > 86400))
+//		{
+//			$stream_context = @stream_context_create(array('http' => array('method'=> 'GET', 'timeout' => AdminHomeController::TIPS_TIMEOUT)));
+//			$content = Tools::file_get_contents('http://api.prestashop.com/partner/premium/get_partners.php?protocol='.$protocol.'&iso_country='.Tools::strtoupper($isoCountry).'&iso_lang='.Tools::strtolower($isoUser).'&ps_version='._PS_VERSION_.'&ps_creation='._PS_CREATION_DATE_.'&host='.urlencode($_SERVER['HTTP_HOST']).'&email='.urlencode(Configuration::get('PS_SHOP_EMAIL')), false, $stream_context);
+//			@unlink('../config/xml/preactivation.xml');
+//			file_put_contents('../config/xml/preactivation.xml', $content);
+//		}
+// END - prestaclean edition
 
 		$count = 0;
 		libxml_use_internal_errors(true);
@@ -613,38 +617,42 @@ class AdminHomeControllerCore extends AdminController
 
 	public function ajaxProcessSavePreactivationRequest()
 	{
-		$isoUser = Context::getContext()->language->iso_code;
-		$isoCountry = Context::getContext()->country->iso_code;
-		$employee = new Employee((int)Context::getContext()->cookie->id_employee);
-		$firstname = $employee->firstname;
-		$lastname = $employee->lastname;
-		$email = $employee->email;
-		$return = @file_get_contents('http://api.prestashop.com/partner/premium/set_request.php?iso_country='.strtoupper($isoCountry).'&iso_lang='.strtolower($isoUser).'&host='.urlencode($_SERVER['HTTP_HOST']).'&ps_version='._PS_VERSION_.'&ps_creation='._PS_CREATION_DATE_.'&partner='.htmlentities(Tools::getValue('module')).'&shop='.urlencode(Configuration::get('PS_SHOP_NAME')).'&email='.urlencode($email).'&firstname='.urlencode($firstname).'&lastname='.urlencode($lastname).'&type=home');
-		die($return);
+// BEGIN - prestaclean edition
+//		$isoUser = Context::getContext()->language->iso_code;
+//		$isoCountry = Context::getContext()->country->iso_code;
+//		$employee = new Employee((int)Context::getContext()->cookie->id_employee);
+//		$firstname = $employee->firstname;
+//		$lastname = $employee->lastname;
+//		$email = $employee->email;
+//		$return = @file_get_contents('http://api.prestashop.com/partner/premium/set_request.php?iso_country='.strtoupper($isoCountry).'&iso_lang='.strtolower($isoUser).'&host='.urlencode($_SERVER['HTTP_HOST']).'&ps_version='._PS_VERSION_.'&ps_creation='._PS_CREATION_DATE_.'&partner='.htmlentities(Tools::getValue('module')).'&shop='.urlencode(Configuration::get('PS_SHOP_NAME')).'&email='.urlencode($email).'&firstname='.urlencode($firstname).'&lastname='.urlencode($lastname).'&type=home');
+//		die($return);
+// BEGIN - prestaclean edition
 	}
 
 	public function getBlockDiscover()
 	{
-		$stream_context = @stream_context_create(array('http' => array('method'=> 'GET', 'timeout' => AdminHomeController::TIPS_TIMEOUT)));
-		$content = '';
-
-		$protocol = Tools::usingSecureMode() ? 'https' : 'http';
-		$isoUser = Context::getContext()->language->iso_code;
-		$isoCountry = Context::getContext()->country->iso_code;
-
-		$content = @file_get_contents($protocol.'://api.prestashop.com/partner/prestashop/prestashop-link.php?iso_country='.$isoCountry.'&iso_lang='.Tools::strtolower($isoUser).'&id_lang='.(int)Context::getContext()->language->id.'&ps_version='.urlencode(_PS_VERSION_), false, $stream_context);
-
-		if (!$content)
-			return ''; // NOK
-		else
-		{
-			if (strpos($content, '|') !== false)
-				$content = explode('|', $content);
-			if ($content[0] == 'OK' && Validate::isCleanHtml($content[1]))
-				return $content[1];
-			else
-				return ''; // NOK
-		}
+// BEGIN - prestaclean edition
+// 		$stream_context = @stream_context_create(array('http' => array('method'=> 'GET', 'timeout' => AdminHomeController::TIPS_TIMEOUT)));
+// 		$content = '';
+// 
+// 		$protocol = Tools::usingSecureMode() ? 'https' : 'http';
+// 		$isoUser = Context::getContext()->language->iso_code;
+// 		$isoCountry = Context::getContext()->country->iso_code;
+// 
+// 		$content = @file_get_contents($protocol.'://api.prestashop.com/partner/prestashop/prestashop-link.php?iso_country='.$isoCountry.'&iso_lang='.Tools::strtolower($isoUser).'&id_lang='.(int)Context::getContext()->language->id.'&ps_version='.urlencode(_PS_VERSION_), false, $stream_context);
+// 
+// 		if (!$content)
+// 			return ''; // NOK
+// 		else
+// 		{
+// 			if (strpos($content, '|') !== false)
+// 				$content = explode('|', $content);
+// 			if ($content[0] == 'OK' && Validate::isCleanHtml($content[1]))
+// 				return $content[1];
+// 			else
+// 				return ''; // NOK
+// 		}
+// END prestaclean edition
 	}
 	public function initContent()
 	{
