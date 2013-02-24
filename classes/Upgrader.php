@@ -27,6 +27,7 @@
 class UpgraderCore
 {
 	const DEFAULT_CHECK_VERSION_DELAY_HOURS = 24;
+	// PrestaClean @TODO : find an alternative upgrade feed
 	public $rss_version_link = 'http://api.prestashop.com/xml/upgrader.xml';
 	public $rss_md5file_link_dir = 'http://api.prestashop.com/xml/md5/';
 	/**

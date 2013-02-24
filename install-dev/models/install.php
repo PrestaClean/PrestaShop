@@ -431,6 +431,7 @@ class InstallModelInstall extends InstallAbstractModel
 		$version = str_replace('.', '', _PS_VERSION_);
 		$version = substr($version, 0, 2);
 
+		// PrestaClean @TODO : find an alternative localizatin list
 		$localization_file_content = @Tools::file_get_contents('http://api.prestashop.com/localization/'.$version.'/'.$data['shop_country'].'.xml');
 		if (!@simplexml_load_string($localization_file_content))
 			$localization_file_content = false;

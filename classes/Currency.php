@@ -380,6 +380,7 @@ class CurrencyCore extends ObjectModel
 
 	public static function refreshCurrencies()
 	{
+		// PrestaClean @TODO : find an alternative currency source
 		// Parse
 		if (!$feed = Tools::simplexml_load_file('http://api.prestashop.com/xml/currencies.xml'))
 			return Tools::displayError('Cannot parse feed.');

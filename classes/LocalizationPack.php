@@ -273,6 +273,7 @@ class LocalizationPackCore
 					PaymentModule::addCurrencyPermissions($currency->id);
 				}
 			}
+						// PrestaClean @TODO : find an alternative currency source
             if (!$feed = Tools::simplexml_load_file('http://api.prestashop.com/xml/currencies.xml'))
                 $this->_errors[] = Tools::displayError('Cannot parse the currencies XML feed.');
             else
@@ -303,6 +304,7 @@ class LocalizationPackCore
 				{
 					$errno = 0;
 					$errstr = '';
+					// PrestaClean @TODO : find an alternative lang_packs sources
 					if (!@fsockopen('api.prestashop.com', 80, $errno, $errstr, 5))
 						$this->_errors[] = Tools::displayError('Archive cannot be downloaded from prestashop.com.');
 					elseif (!($lang_pack = Tools::jsonDecode(Tools::file_get_contents('http://www.prestashop.com/download/lang_packs/get_language_pack.php?version='._PS_VERSION_.'&iso_lang='.$attributes['iso_code']))))

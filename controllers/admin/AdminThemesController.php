@@ -428,9 +428,11 @@ class AdminThemesControllerCore extends AdminController
 
 	public function ajaxProcessGetAddonsThemes()
 	{
-		// notice : readfile should be replaced by something else
-		if (@fsockopen('addons.prestashop.com', 80, $errno, $errst, 3))
-			@readfile('http://addons.prestashop.com/adminthemes.php?lang='.$this->context->language->iso_code);
+// BEGIN - prestaclean edition
+//		// notice : readfile should be replaced by something else
+//		if (@fsockopen('addons.prestashop.com', 80, $errno, $errst, 3))
+//					@readfile('http://addons.prestashop.com/adminthemes.php?lang='.$this->context->language->iso_code);
+// END - prestaclean edition
 	}
 
 	/**
