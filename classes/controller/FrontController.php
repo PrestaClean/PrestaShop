@@ -330,6 +330,7 @@ class FrontControllerCore extends Controller
 			'shop_name' => Configuration::get('PS_SHOP_NAME'),
 			'roundMode' => (int)Configuration::get('PS_PRICE_ROUND_MODE'),
 			'use_taxes' => (int)Configuration::get('PS_TAX'),
+			'show_taxes' => (int)(Configuration::get('PS_TAX_DISPLAY') == 1 && (int)Configuration::get('PS_TAX')),
 			'display_tax_label' => (bool)$display_tax_label,
 			'vat_management' => (int)Configuration::get('VATNUMBER_MANAGEMENT'),
 			'opc' => (bool)Configuration::get('PS_ORDER_PROCESS_TYPE'),
@@ -700,13 +701,13 @@ class FrontControllerCore extends Controller
 	public function setMobileMedia()
 	{
 		$this->addjquery();
-		$this->addJS(_THEME_MOBILE_JS_DIR_.'jquery.mobile-1.2.0.js');
+		$this->addJS(_THEME_MOBILE_JS_DIR_.'jquery.mobile-1.3.0.min.js');
 		$this->addJS(_THEME_MOBILE_JS_DIR_.'jqm-docs.js');
 		$this->addJS(_PS_JS_DIR_.'tools.js');
 		$this->addJS(_THEME_MOBILE_JS_DIR_.'global.js');
 			$this->addjqueryPlugin('fancybox');
 
-		$this->addCSS(_THEME_MOBILE_CSS_DIR_.'jquery.mobile-1.2.0.min.css', 'all');
+		$this->addCSS(_THEME_MOBILE_CSS_DIR_.'jquery.mobile-1.3.0.min.css', 'all');
 		$this->addCSS(_THEME_MOBILE_CSS_DIR_.'jqm-docs.css', 'all');
 		$this->addCSS(_THEME_MOBILE_CSS_DIR_.'global.css', 'all');
 	}

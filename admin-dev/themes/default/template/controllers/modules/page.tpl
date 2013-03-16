@@ -24,21 +24,19 @@
 *}
 
 <div id="productBox">
-
 	{include file='controllers/modules/header.tpl'}
 	{include file='controllers/modules/filters.tpl'}
 
 	<ul class="view-modules">
 		<li class="button normal-view-disabled"><img src="themes/default/img/modules_view_layout_sidebar.png" alt="{l s='Normal view'}" border="0" /><span>{l s='Normal view'}</span></li>
 		<li class="button favorites-view"><a  href="index.php?controller={$smarty.get.controller|htmlentities}&token={$smarty.get.token|htmlentities}&select=favorites"><img src="themes/default/img/modules_view_table_select_row.png" alt="{l s='Favorites view'}" border="0" /><span>{l s='Favorites view'}</span></a></li>
-	
 	</ul>
 
 	<div id="container">
 		<!--start sidebar module-->
 		<div class="sidebar">
 			<div class="categorieTitle">
-				<h3>{l s='Categories:'}</h3>
+				<h3>{l s='Categories'}</h3>
 				<div class="subHeadline">&nbsp;</div>
 				<ul class="categorieList">
 					<li {if isset($categoryFiltered.favorites)}style="background-color:#EBEDF4"{/if} class="categoryModuleFilterLink">
@@ -58,10 +56,8 @@
 				</ul>
 			</div>
 		</div>
-
 		<div id="moduleContainer">
 			{include file='controllers/modules/list.tpl'}
 		</div>
 	</div>
-
 </div>

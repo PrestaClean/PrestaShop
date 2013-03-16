@@ -44,3 +44,9 @@ ALTER TABLE `PREFIX_cart` ADD `mobile_theme` tinyint(1) NOT NULL DEFAULT 0 AFTER
 
 ALTER TABLE `PREFIX_address` CHANGE `phone` `phone` varchar(32) default NULL;
 ALTER TABLE `PREFIX_address` CHANGE `phone_mobile` `phone_mobile` varchar(32) default NULL;
+
+/* PHP:update_genders_images(); */;
+
+UPDATE `PREFIX_customer` SET `id_gender` = 1 WHERE `email` LIKE 'pub@prestashop.com' AND `id_customer` = 1 AND `id_gender` = 4;
+
+UPDATE `PREFIX_cart_rule_carrier` crc INNER JOIN `PREFIX_carrier` c ON crc.`id_carrier` = c.`id_carrier` SET crc.`id_carrier` = c.`id_reference`;

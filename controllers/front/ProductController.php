@@ -26,6 +26,7 @@
 
 class ProductControllerCore extends FrontController
 {
+	public $php_self = 'product';
 	/**
 	 * @var Product
 	 */
@@ -126,7 +127,7 @@ class ProductControllerCore extends FrontController
 						default:
 							header('HTTP/1.1 404 Not Found');
 							header('Status: 404 Not Found');
-							$this->errors[] = Tools::displayError('Product is no longer available.');
+							$this->errors[] = Tools::displayError('This product is no longer available.');
 						break;
 					}
 				}
@@ -197,7 +198,7 @@ class ProductControllerCore extends FrontController
 				$this->formTargetFormat();
 			}
 			else if (Tools::getIsset('deletePicture') && !$this->context->cart->deleteCustomizationToProduct($this->product->id, Tools::getValue('deletePicture')))
-				$this->errors[] = Tools::displayError('An error occurred while deleting the selected picture');
+				$this->errors[] = Tools::displayError('An error occurred while deleting the selected picture.');
 
 			
 			$pictures = array();
@@ -320,7 +321,7 @@ class ProductControllerCore extends FrontController
 		$product_price = $this->product->getPrice(Product::$_taxCalculationMethod == PS_TAX_INC, false);
 		$address = new Address($this->context->cart->{Configuration::get('PS_TAX_ADDRESS_TYPE')});
 		$this->context->smarty->assign(array(
-			'quantity_discounts' => $this->formatQuantityDiscounts($quantity_discounts, $product_price, (float)$tax),
+			'quantity_discounts' => $this->formatQuantityDiscounts($quantity_discounts, $product_price, (float)$tax, $ecotax_tax_amount),
 			'ecotax_tax_inc' => $ecotax_tax_amount,
 			'ecotax_tax_exc' => Tools::ps_round($this->product->ecotax, 2),
 			'ecotaxTax_rate' => $ecotax_rate,
@@ -472,7 +473,7 @@ class ProductControllerCore extends FrontController
 		$attributes_combinations = Product::getAttributesInformationsByProduct($this->product->id);
 		foreach ($attributes_combinations as &$ac)
 			foreach ($ac as &$val)
-				$val = str_replace('-', '_', Tools::link_rewrite($val));
+				$val = str_replace('-', '_', Tools::link_rewrite(str_replace(array(',', '.'), '-', $val)));
 		$this->context->smarty->assign('attributesCombinations', $attributes_combinations);
 	}
 
@@ -543,12 +544,12 @@ class ProductControllerCore extends FrontController
 					return false;
 				/* Original file */
 				if (!ImageManager::resize($tmp_name, _PS_UPLOAD_DIR_.$file_name))
-					$this->errors[] = Tools::displayError('An error occurred during the image upload.');
+					$this->errors[] = Tools::displayError('An error occurred during the image upload process.');
 				/* A smaller one */
 				elseif (!ImageManager::resize($tmp_name, _PS_UPLOAD_DIR_.$file_name.'_small', $product_picture_width, $product_picture_height))
-					$this->errors[] = Tools::displayError('An error occurred during the image upload.');
+					$this->errors[] = Tools::displayError('An error occurred during the image upload process.');
 				elseif (!chmod(_PS_UPLOAD_DIR_.$file_name, 0777) || !chmod(_PS_UPLOAD_DIR_.$file_name.'_small', 0777))
-					$this->errors[] = Tools::displayError('An error occurred during the image upload.');
+					$this->errors[] = Tools::displayError('An error occurred during the image upload process.');
 				else
 					$this->context->cart->addPictureToProduct($this->product->id, $indexes[$field_name], Product::CUSTOMIZE_FILE, $file_name);
 				unlink($tmp_name);
@@ -590,14 +591,14 @@ class ProductControllerCore extends FrontController
 		$this->context->smarty->assign('customizationFormTarget', $customization_form_target);
 	}
 
-	protected function formatQuantityDiscounts($specific_prices, $price, $tax_rate)
+	protected function formatQuantityDiscounts($specific_prices, $price, $tax_rate, $ecotax_amount)
 	{
 		foreach ($specific_prices as $key => &$row)
 		{
 			$row['quantity'] = &$row['from_quantity'];
 			if ($row['price'] >= 0) // The price may be directly set
 			{
-				$cur_price = (Product::$_taxCalculationMethod == PS_TAX_EXC ? $row['price'] : $row['price'] * (1 + $tax_rate / 100));
+				$cur_price = (Product::$_taxCalculationMethod == PS_TAX_EXC ? $row['price'] : $row['price'] * (1 + $tax_rate / 100)) + (float)$ecotax_amount;
 				if ($row['reduction_type'] == 'amount')
 					$cur_price -= (Product::$_taxCalculationMethod == PS_TAX_INC ? $row['reduction'] : $row['reduction'] / (1 + $tax_rate / 100));
 				else
