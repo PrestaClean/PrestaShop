@@ -987,7 +987,7 @@ class ToolsCore
 
 		// Remove all non-whitelist chars.
 		if ($allow_accented_chars)
-			$str = preg_replace('/[^a-zA-Z0-9\s\'\:\/\[\]-\pL]/u', '', $str);	
+			$str = preg_replace('/[^a-zA-Z0-9\s\'\:\/\[\]-\pL]/u', '', $str);
 		else
 			$str = preg_replace('/[^a-zA-Z0-9\s\'\:\/\[\]-]/','', $str);
 
@@ -1288,7 +1288,7 @@ class ToolsCore
 			curl_setopt($curl, CURLOPT_URL, $url);
 			curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
 			curl_setopt($curl, CURLOPT_TIMEOUT, $curl_timeout);
-			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);			
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 			$opts = stream_context_get_options($stream_context);
 			if (isset($opts['http']['method']) && Tools::strtolower($opts['http']['method']) == 'post')
 			{
@@ -1418,13 +1418,11 @@ class ToolsCore
 	public static function replaceByAbsoluteURL($matches)
 	{
 		global $current_css_file;
-
 		$protocol_link = Tools::getCurrentUrlProtocolPrefix();
-
-		if (array_key_exists(1, $matches))
+		if (array_key_exists(1, $matches) && array_key_exists(2, $matches))
 		{
-			$tmp = dirname($current_css_file).'/'.$matches[1];
-			return 'url(\''.$protocol_link.Tools::getMediaServer($tmp).$tmp.'\')';
+			$tmp = dirname($current_css_file).'/'.$matches[2];
+			return $matches[1].$protocol_link.Tools::getMediaServer($tmp).$tmp;
 		}
 		return false;
 	}
@@ -1632,7 +1630,7 @@ class ToolsCore
 					fwrite($write_fd, $media_domains);
 					fwrite($write_fd, $domain_rewrite_cond);
 					fwrite($write_fd, 'RewriteRule ^'.ltrim($uri['virtual'], '/').'(.*) '.$uri['physical']."$1 [L]\n\n");
-				}
+				}			
 
 				if ($rewrite_settings)
 				{
@@ -1669,6 +1667,10 @@ class ToolsCore
 					fwrite($write_fd, $domain_rewrite_cond);
 					fwrite($write_fd, 'RewriteRule ^c/([a-zA-Z_-]+)(-[0-9]+)?/.+\.jpg$ %{ENV:REWRITEBASE}img/c/$1$2.jpg [L]'."\n");
 				}
+				
+				fwrite($write_fd, "# AlphaImageLoader for IE and fancybox\n");
+				fwrite($write_fd, $domain_rewrite_cond);
+				fwrite($write_fd, 'RewriteRule ^images_ie/?([^/]+)\.(jpe?g|png|gif)$ js/jquery/plugins/fancybox/images/$1.$2 [L]'."\n");
 			}
 			// Redirections to dispatcher
 			if ($rewrite_settings)
@@ -1810,20 +1812,14 @@ exit;
 	 */
 	public static function displayAsDeprecated($message = null)
 	{
-		if (_PS_DISPLAY_COMPATIBILITY_WARNING_)
-		{
 			$backtrace = debug_backtrace();
 			$callee = next($backtrace);
-			if ($message)
-				trigger_error($message, E_USER_WARNING);
-			else
-			{
-				trigger_error('Function <b>'.$callee['function'].'()</b> is deprecated in <b>'.$callee['file'].'</b> on line <b>'.$callee['line'].'</b><br />', E_USER_WARNING);
-				$message = 'The function '.$callee['function'].' (Line '.$callee['line'].') is deprecated and will be removed in the next major version.';
-			}
 			$class = isset($callee['class']) ? $callee['class'] : null;
-			Logger::addLog($message, 3, $class);
-		}
+			if ($message === null)
+				$message = 'The function '.$callee['function'].' (Line '.$callee['line'].') is deprecated and will be removed in the next major version.';
+			$error = 'Function <b>'.$callee['function'].'()</b> is deprecated in <b>'.$callee['file'].'</b> on line <b>'.$callee['line'].'</b><br />';
+
+			Tools::throwDeprecated($error, $message, $class);
 	}
 
 	/**
@@ -1835,9 +1831,8 @@ exit;
 		$callee = next($backtrace);
 		$error = 'Parameter <b>'.$parameter.'</b> in function <b>'.$callee['function'].'()</b> is deprecated in <b>'.$callee['file'].'</b> on line <b>'.$callee['Line'].'</b><br />';
 		$message = 'The parameter '.$parameter.' in function '.$callee['function'].' (Line '.$callee['Line'].') is deprecated and will be removed in the next major version.';
-
-		trigger_error($message, E_WARNING);
 		$class = isset($callee['class']) ? $callee['class'] : null;
+
 		Tools::throwDeprecated($error, $message, $class);
 	}
 
@@ -1847,8 +1842,8 @@ exit;
 		$callee = current($backtrace);
 		$error = 'File <b>'.$callee['file'].'</b> is deprecated<br />';
 		$message = 'The file '.$callee['file'].' is deprecated and will be removed in the next major version.';
-
 		$class = isset($callee['class']) ? $callee['class'] : null;
+		
 		Tools::throwDeprecated($error, $message, $class);
 	}
 
@@ -1856,7 +1851,7 @@ exit;
 	{
 		if (_PS_DISPLAY_COMPATIBILITY_WARNING_)
 		{
-//			trigger_error($error, E_USER_WARNING);
+			trigger_error($error, E_USER_WARNING);
 			Logger::addLog($message, 3, $class);
 		}
 	}

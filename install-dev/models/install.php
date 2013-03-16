@@ -560,7 +560,6 @@ class InstallModelInstall extends InstallAbstractModel
 				'gsitemap',
 				'homefeatured',
 				'homeslider',
-				'moneybookers',
 				'pagesnotfound',
 				'sekeywords',
 				'statsbestcategories',

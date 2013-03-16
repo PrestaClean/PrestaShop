@@ -292,7 +292,7 @@ class CartCore extends ObjectModel
 			if (Configuration::get('PS_TAX_ADDRESS_TYPE') == 'id_address_invoice')
 				$address_id = (int)$cart->id_address_invoice;
 			else
-				$address_id = (int)$product->id_address_delivery; // Get delivery address of the product from the cart
+				$address_id = (int)$product['id_address_delivery']; // Get delivery address of the product from the cart
 			if (!Address::addressExists($address_id))
 				$address_id = null;
 			
@@ -1701,7 +1701,7 @@ class CartCore extends ObjectModel
 			if (!$this->allow_seperated_package)
 				$key = 'in_stock';
 			else
-				$key = (!$product['out_of_stock']) ? 'in_stock' : 'out_of_stock';
+				$key = $product['in_stock'] ? 'in_stock' : 'out_of_stock';
 
 			if (empty($product['carrier_list']))
 				$product['carrier_list'] = array(0);
