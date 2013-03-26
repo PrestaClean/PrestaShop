@@ -273,7 +273,6 @@ class LocalizationPackCore
 					PaymentModule::addCurrencyPermissions($currency->id);
 				}
 			}
-						// PrestaClean @TODO : find an alternative currency source
             if (!$feed = Tools::simplexml_load_file('http://api.prestashop.com/xml/currencies.xml'))
                 $this->_errors[] = Tools::displayError('Cannot parse the currencies XML feed.');
             else
@@ -296,50 +295,15 @@ class LocalizationPackCore
 				// if we are not in an installation context or if the pack is not available in the local directory
 				if (Language::getIdByIso($attributes['iso_code']) && !$install_mode)
 					continue;
-
-				$errno = 0;
-				$errstr = '';
-				// PrestaClean @TODO : find an alternative lang_packs sources
-				if (!$lang_pack_link = Tools::file_get_contents('http://www.prestashop.com/download/lang_packs/get_language_pack.php?version='._PS_VERSION_.'&iso_lang='.$attributes['iso_code']))
-					$this->_errors[] = Tools::displayError('Archive cannot be downloaded from prestashop.com.');
-				elseif (!$lang_pack = Tools::jsonDecode($lang_pack_link))
-					$this->_errors[] = Tools::displayError('Error occurred when language was checked according to your Prestashop version.');
-				// PrestaClean @TODO : find an alternative lang_packs sources
-				elseif ($content = Tools::file_get_contents('http://translations.prestashop.com/download/lang_packs/gzip/'.$lang_pack->version.'/'.$attributes['iso_code'].'.gzip'))
-				{
-					$file = _PS_TRANSLATIONS_DIR_.$attributes['iso_code'].'.gzip';
-					if (file_put_contents($file, $content))
-					{
-						$gz = new Archive_Tar($file, true);
-						$files_list = $gz->listContent();
-
-						if (!$gz->extract(_PS_TRANSLATIONS_DIR_.'../', false))
-						{
-							$this->_errors[] = Tools::displayError('Cannot decompress the translation file for the following language: ').(string)$attributes['iso_code'];
-							return false;
-						}
-						else
-						{
-							AdminTranslationsController::checkAndAddMailsFiles($attributes['iso_code'], $files_list);
-							AdminTranslationsController::addNewTabs($attributes['iso_code'], $files_list);
-						}
-						if (!Language::checkAndAddLanguage((string)$attributes['iso_code'], $lang_pack))
-						{
-							$this->_errors[] = Tools::displayError('An error occurred while creating the language: ').(string)$attributes['iso_code'];
-							return false;
-						}
-						@unlink($file);
-					}
-					else
-						$this->_errors[] = Tools::displayError('Server does not have permissions for writing.');
-				}
+				$errors = Language::downloadAndInstallLanguagePack($attributes['iso_code'], $attributes['version']);
+				if ($errors !== true && is_array($errors))
+					$this->_errors = array_merge($this->_errors, $errors);
 			}
-
 		// change the default language if there is only one language in the localization pack
 		if (!count($this->_errors) && $install_mode && isset($attributes['iso_code']) && count($xml->languages->language) == 1)
 			$this->iso_code_lang = $attributes['iso_code'];
 
-		return true;
+		return !count($this->_errors);
 	}
 
 	protected function _installUnits($xml)

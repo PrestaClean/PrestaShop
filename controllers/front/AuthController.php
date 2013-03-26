@@ -379,6 +379,8 @@ class AuthControllerCore extends FrontController
 				$this->errors[] = Tools::displayError('An account using this email address has already been registered.', false);
 		// Preparing customer
 		$customer = new Customer();
+		$lastnameAddress = $_POST['lastname'];
+		$firstnameAddress = $_POST['firstname'];		
 		$_POST['lastname'] = Tools::getValue('customer_lastname');
 		$_POST['firstname'] = Tools::getValue('customer_firstname');
 		
@@ -387,7 +389,7 @@ class AuthControllerCore extends FrontController
 		{
 			if (Tools::isSubmit('submitGuestAccount') || !Tools::getValue('is_new_customer'))
 			{
-				if (!Tools::getValue('phone'))
+				if (!Tools::getValue('phone') && !Tools::getValue('phone_mobile'))
 					$error_phone = true;
 			}
 			elseif (((Configuration::get('PS_REGISTRATION_PROCESS_TYPE') || Configuration::get('PS_ORDER_PROCESS_TYPE')) 
@@ -468,8 +470,6 @@ class AuthControllerCore extends FrontController
 		}
 		else // if registration type is in one step, we save the address
 		{
-			$lastnameAddress = $_POST['lastname'];
-			$firstnameAddress = $_POST['firstname'];
 			// Preparing address
 			$address = new Address();
 			$_POST['lastname'] = $lastnameAddress;
@@ -486,22 +486,16 @@ class AuthControllerCore extends FrontController
 				$address->address2 = $normalize->AddressLineStandardization($address->address2);
 			}
 
-			$country = new Country((int)Tools::getValue('id_country'));
-			if ($country->need_zip_code)
-			{
-				if (($postcode = Tools::getValue('postcode')) && $country->zip_code_format)
-				{
-					if (!$country->checkZipCode($postcode))
-						$this->errors[] = sprintf(
-							Tools::displayError('The Zip/Postal code you\'ve entered is invalid. It must follow this format: %s'),
-							str_replace('C', $country->iso_code, str_replace('N', '0', str_replace('L', 'A', $country->zip_code_format)))
-						);
-				}
-				elseif ($country->zip_code_format)
-					$this->errors[] = Tools::displayError('A Zip / Postal code is required.');
-				elseif ($postcode && !preg_match('/^[0-9a-zA-Z -]{4,9}$/ui', $postcode))
-					$this->errors[] = Tools::displayError('The Zip / Postal code is invalid.');
-			}
+			if (!($country = new Country($address->id_country)) || !Validate::isLoadedObject($country))
+				$this->errors[] = Tools::displayError('Country cannot be loaded with address->id_country');
+			$postcode = Tools::getValue('postcode');		
+			/* Check zip code format */
+			if ($country->zip_code_format && !$country->checkZipCode($postcode))
+				$this->errors[] = sprintf(Tools::displayError('The Zip/Postal code you\'ve entered is invalid. It must follow this format: %s'), str_replace('C', $country->iso_code, str_replace('N', '0', str_replace('L', 'A', $country->zip_code_format))));
+			elseif(empty($postcode) && $country->need_zip_code)
+				$this->errors[] = Tools::displayError('A Zip / Postal code is required.');
+			elseif ($postcode && !Validate::isPostCode($postcode))
+				$this->errors[] = Tools::displayError('The Zip / Postal code is invalid.');
 
 			if ($country->need_identification_number && (!Tools::getValue('dni') || !Validate::isDniLite(Tools::getValue('dni'))))
 				$this->errors[] = Tools::displayError('The identification number is incorrect or has already been used.');

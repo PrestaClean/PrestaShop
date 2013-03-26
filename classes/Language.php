@@ -190,10 +190,13 @@ class LanguageCore extends ObjectModel
 		return $themes;
 	}
 
-	public function add($autodate = true, $nullValues = false)
+	public function add($autodate = true, $nullValues = false, $only_add = false)
 	{
 		if (!parent::add($autodate))
 			return false;
+
+		if ($only_add)
+			return true;
 
 		// create empty files if they not exists
 		$this->_generateFiles();
@@ -201,8 +204,8 @@ class LanguageCore extends ObjectModel
 		// @todo Since a lot of modules are not in right format with their primary keys name, just get true ...
 		$resUpdateSQL = $this->loadUpdateSQL();
 		$resUpdateSQL = true;
-
-		return $resUpdateSQL && Tools::generateHtaccess();
+		Tools::generateHtaccess();
+		return $resUpdateSQL;
 	}
 
 	public function toggleStatus()
@@ -681,7 +684,7 @@ class LanguageCore extends ObjectModel
 		return Tools::generateHtaccess();
 	}
 
-	public static function checkAndAddLanguage($iso_code, $lang_pack = false)
+	public static function checkAndAddLanguage($iso_code, $lang_pack = false, $only_add = false, $params_lang = null)
 	{
 		if (Language::getIdByIso($iso_code))
 			return true;
@@ -700,10 +703,15 @@ class LanguageCore extends ObjectModel
 				&& isset($lang_pack->iso_code))
 					$lang->name = $lang_pack->name;
 		}
+		elseif ($params_lang !== null && is_array($params_lang))
+		{
+			foreach ($params_lang as $key => $value)
+				$lang->$key = $value;
+		}
 		else
 			return false;
 		
-		if (!$lang->add())
+		if (!$lang->add(true, false, $only_add))
 			return false;
 
 		$flag = Tools::file_get_contents('http://www.prestashop.com/download/lang_packs/flags/jpeg/'.$iso_code.'.jpg');
@@ -765,6 +773,52 @@ class LanguageCore extends ObjectModel
 				WHERE l.`active` = 1
 			');
 		return self::$countActiveLanguages;
+	}
+
+	public static function downloadAndInstallLanguagePack($iso, $version = null, $params = null)
+	{
+		require_once(_PS_TOOL_DIR_.'tar/Archive_Tar.php');
+
+		if (!Validate::isLanguageIsoCode($iso))
+			return false;
+
+		if ($version == null)
+			$version = _PS_VERSION_;
+		$lang_pack = false;
+		$lang_pack_ok = false;
+		$errors = array();
+		$file = _PS_TRANSLATIONS_DIR_.$iso.'.gzip';
+		// PrestaClean @TODO : find an alternative lang_packs sources
+		if (!$lang_pack_link = Tools::file_get_contents('http://www.prestashop.com/download/lang_packs/get_language_pack.php?version='.$version.'&iso_lang='.$iso))
+			$errors[] = Tools::displayError('Archive cannot be downloaded from prestashop.com.');
+		elseif (!$lang_pack = Tools::jsonDecode($lang_pack_link))
+			$errors[] = Tools::displayError('Error occurred when language was checked according to your Prestashop version.');
+		// PrestaClean @TODO : find an alternative lang_packs sources
+		elseif ($content = Tools::file_get_contents('http://translations.prestashop.com/download/lang_packs/gzip/'.$lang_pack->version.'/'.$lang_pack->iso_code.'.gzip'))
+			if (!@file_put_contents($file, $content))
+				$errors[] = Tools::displayError('Server does not have permissions for writing.');
+		if (file_exists($file))
+		{
+			$gz = new Archive_Tar($file, true);
+			$files_list = $gz->listContent();
+			if (!$gz->extract(_PS_TRANSLATIONS_DIR_.'../', false))
+				$errors[] = Tools::displayError('Cannot decompress the translation file for the following language: ').(string)$iso;
+			if (!Language::checkAndAddLanguage((string)$iso, $lang_pack, false, $params))
+				$errors[] = Tools::displayError('An error occurred while creating the language: ').(string)$iso;
+			else
+			{
+				// Reset cache 
+				Language::loadLanguages();
+
+				AdminTranslationsController::checkAndAddMailsFiles($iso, $files_list);
+				AdminTranslationsController::addNewTabs($iso, $files_list);
+			}
+			@unlink($file);
+		}
+		else
+			$errors[] = Tools::displayError('No language pack is available for your version.');
+
+		return count($errors) ? $errors : true;
 	}
 
 	/**
